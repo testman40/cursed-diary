@@ -43,10 +43,21 @@
   const AUTO_ADVANCE_TEXT_TYPES = new Set(["dialogue", "narration", "time_cue"]);
   const AUTO_ADVANCE_CONTROL_TYPES = new Set(["background", "environment", "bgm", "sfx"]);
   const PERSISTENT_SFX_IDS = new Set(["SFX_EARTHQUAKE_SHAKE", "SFX_CH1_SC02_EARTHQUAKE_ROOM_SHAKE"]);
-  const GAME_VERSION = "1.0.0";
+  const GAME_VERSION = "1.0.1";
   const UPDATE_HISTORY = Object.freeze([
     Object.freeze({
       version: GAME_VERSION,
+      date: "2026-08-12",
+      changes: Object.freeze([
+        "スマートフォン縦画面の表示を最適化",
+        "横長背景を縦画面でも全体表示しやすいよう改善",
+        "スマートフォンでの台詞ウィンドウ表示を調整",
+        "画面回転時のレイアウトを改善",
+        "ノッチやブラウザUIを考慮した表示調整を追加"
+      ])
+    }),
+    Object.freeze({
+      version: "1.0.0",
       date: "2026-08-12",
       changes: Object.freeze([
         "正式版を公開",

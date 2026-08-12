@@ -21,6 +21,7 @@ button { font: inherit; }
   position: relative;
   width: 100vw;
   height: 100vh;
+  height: 100svh;
   height: 100dvh;
   overflow: hidden;
   background: radial-gradient(circle at 50% 35%, #282822, #080909 68%);
@@ -830,9 +831,7 @@ button { font: inherit; }
 }
 
 @media (max-width: 640px) {
-  .game.is-menu .game__background { background-position: 35% center; }
   .game__header { font-size: .68rem; }
-  .message-window { min-height: 9.5rem; bottom: max(1.5vh, env(safe-area-inset-bottom)); }
   .warning-card { width: min(92vw, 44rem); }
   .warning-card__actions { flex-direction: column; }
   .warning-card__actions button { width: 100%; }
@@ -867,6 +866,245 @@ button { font: inherit; }
   .update-history-card__entry time { margin: .25rem 0 0; }
   .update-history-card__entry ul { font-size: .82rem; line-height: 1.65; }
   .update-history-card__back { width: 100%; }
+}
+
+@media (max-width: 599px) and (orientation: portrait) {
+  html,
+  body { background: #030405; }
+
+  .game {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100svh;
+    min-height: 100dvh;
+    background: #030405;
+  }
+
+  .game__background {
+    background-color: #030405;
+    background-position: center 38%;
+    background-size: contain;
+  }
+
+  .game.is-menu .game__background { background-position: center; }
+
+  .game__shade {
+    background: linear-gradient(180deg, rgba(3, 5, 7, .28), rgba(3, 5, 7, .08) 50%, rgba(2, 3, 5, .78));
+  }
+
+  .game__header {
+    align-items: flex-start;
+    gap: .65rem;
+    padding:
+      max(.65rem, env(safe-area-inset-top))
+      max(.8rem, env(safe-area-inset-right))
+      .65rem
+      max(.8rem, env(safe-area-inset-left));
+    font-size: clamp(.7rem, 3vw, .78rem);
+    line-height: 1.35;
+  }
+
+  .game__chapter {
+    min-width: 0;
+    max-width: 58%;
+    overflow-wrap: anywhere;
+  }
+
+  .game__progress {
+    flex: 0 0 auto;
+    max-width: 42%;
+    text-align: right;
+  }
+
+  .title-card,
+  .time-card,
+  .end-card,
+  .error-card,
+  .warning-card,
+  .choice-card,
+  .character-list-card,
+  .character-detail-card,
+  .settings-card,
+  .update-history-card {
+    width: calc(100% - 1.5rem - env(safe-area-inset-left) - env(safe-area-inset-right));
+  }
+
+  .game.is-menu .title-card { padding: 1rem .85rem; }
+
+  .title-card h1,
+  .end-card h2 {
+    margin-bottom: 1rem;
+    font-size: clamp(1.55rem, 8vw, 2.25rem);
+  }
+
+  .title-card__menu .primary-button,
+  .title-card__menu .secondary-button {
+    width: min(100%, 18rem);
+    min-width: 0;
+    min-height: 2.75rem;
+  }
+
+  .warning-card,
+  .character-list-card,
+  .character-detail-card,
+  .settings-card,
+  .update-history-card {
+    top: 50%;
+    max-height: calc(100vh - max(4.5rem, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom) + 2.5rem)));
+    max-height: calc(100svh - max(4.5rem, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom) + 2.5rem)));
+    max-height: calc(100dvh - max(4.5rem, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom) + 2.5rem)));
+  }
+
+  .primary-button,
+  .secondary-button,
+  .choice-card__option { min-height: 2.75rem; }
+
+  .message-window {
+    left: max(.75rem, env(safe-area-inset-left));
+    right: max(.75rem, env(safe-area-inset-right));
+    bottom: max(.75rem, env(safe-area-inset-bottom));
+    min-height: 0;
+    max-height: min(35dvh, 17rem);
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    padding: .8rem 1rem 1.45rem;
+  }
+
+  .message-window__meta {
+    min-height: 1.35rem;
+    margin-bottom: .25rem;
+  }
+
+  .message-window__speaker { font-size: clamp(.94rem, 4vw, 1.05rem); }
+
+  .message-window__text {
+    min-height: 0;
+    font-size: clamp(1rem, 4.25vw, 1.12rem);
+    line-height: 1.7;
+    letter-spacing: .02em;
+  }
+
+  .message-window__next {
+    right: .85rem;
+    bottom: .45rem;
+  }
+
+  .choice-card {
+    max-height: calc(100dvh - max(4rem, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom) + 2rem)));
+    overflow-y: auto;
+    padding: 1rem;
+  }
+
+  .choice-card__option { padding: .7rem .8rem; }
+
+  .end-card.is-final-ending {
+    padding:
+      max(1.25rem, env(safe-area-inset-top))
+      max(.85rem, env(safe-area-inset-right))
+      max(1.25rem, env(safe-area-inset-bottom))
+      max(.85rem, env(safe-area-inset-left));
+  }
+
+  .end-card__credits {
+    width: min(92vw, 30rem);
+    min-height: min(38dvh, 13rem);
+  }
+
+  .end-card__credit-card p {
+    margin: .5rem 0;
+    font-size: clamp(.78rem, 3.5vw, .94rem);
+    line-height: 1.65;
+  }
+
+  .end-card__credit-card .end-card__work-title {
+    font-size: clamp(1.25rem, 6vw, 1.7rem);
+  }
+
+  .end-card__return {
+    right: max(.75rem, env(safe-area-inset-right));
+    bottom: max(.75rem, env(safe-area-inset-bottom));
+    min-height: 2.75rem;
+  }
+}
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .game__header {
+    padding:
+      max(.45rem, env(safe-area-inset-top))
+      max(.75rem, env(safe-area-inset-right))
+      .45rem
+      max(.75rem, env(safe-area-inset-left));
+    font-size: .68rem;
+  }
+
+  .game.is-menu .title-card { padding: .65rem 1rem; }
+
+  .title-card h1,
+  .end-card h2 {
+    margin: .15rem 0 .55rem;
+    font-size: clamp(1.35rem, 4vw, 2rem);
+  }
+
+  .title-card__status { min-height: 1.2em; margin: .3rem 0; }
+
+  .title-card__menu {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: .4rem;
+    width: min(92vw, 36rem);
+    margin: .45rem auto 0;
+  }
+
+  .title-card__menu .primary-button,
+  .title-card__menu .secondary-button {
+    width: 100%;
+    min-width: 0;
+    min-height: 2.75rem;
+    padding: .55rem .8rem;
+  }
+
+  .title-card__version { margin-top: .4rem; }
+
+  .warning-card,
+  .character-list-card,
+  .character-detail-card,
+  .settings-card,
+  .update-history-card {
+    top: 50%;
+    max-height: calc(100dvh - max(1rem, calc(env(safe-area-inset-top) + env(safe-area-inset-bottom))));
+    padding: .85rem;
+  }
+
+  .message-window {
+    left: max(.75rem, env(safe-area-inset-left));
+    right: max(.75rem, env(safe-area-inset-right));
+    bottom: max(.55rem, env(safe-area-inset-bottom));
+    min-height: 0;
+    max-height: 46dvh;
+    overflow-y: auto;
+    padding: .65rem 1rem 1.15rem;
+  }
+
+  .message-window__meta { min-height: 1.2rem; margin-bottom: .15rem; }
+  .message-window__speaker { font-size: .9rem; }
+  .message-window__text { min-height: 0; font-size: .96rem; line-height: 1.55; }
+  .message-window__next { bottom: .35rem; }
+
+  .choice-card {
+    width: min(88vw, 42rem);
+    max-height: calc(100dvh - 1rem);
+    overflow-y: auto;
+    padding: .75rem;
+  }
+
+  .choice-card__prompt { margin-bottom: .55rem; }
+  .choice-card__options { gap: .45rem; }
+  .choice-card__option { min-height: 2.75rem; padding: .55rem .8rem; }
+
+  .end-card.is-final-ending {
+    padding: max(.75rem, env(safe-area-inset-top)) max(.75rem, env(safe-area-inset-right)) max(.75rem, env(safe-area-inset-bottom)) max(.75rem, env(safe-area-inset-left));
+  }
+
+  .end-card__credits { min-height: min(52dvh, 10rem); }
 }
 
 @media (prefers-reduced-motion: reduce) {
