@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>呪いの日記｜第一章「失われた居場所」</title>
+  <link rel="icon" href="data:,">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main id="game" class="game" aria-live="polite">
+    <div id="background" class="game__background" aria-hidden="true"></div>
+    <div class="game__shade" aria-hidden="true"></div>
+    <div id="effectLayer" class="effect-layer" aria-hidden="true"></div>
+
+    <header class="game__header">
+      <p id="chapterLabel" class="game__chapter">第一章「失われた居場所」</p>
+      <p id="progressLabel" class="game__progress">準備中</p>
+    </header>
+
+    <section id="titleCard" class="title-card">
+      <p class="title-card__series">呪いの日記</p>
+      <h1 id="titleText">第一章「失われた居場所」</h1>
+      <p id="loadStatus" class="title-card__status">台本を読み込んでいます…</p>
+      <div class="title-card__menu">
+        <button id="startButton" class="primary-button" type="button" disabled>第一章を開始</button>
+        <button id="charactersButton" class="secondary-button" type="button">登場人物</button>
+        <button id="settingsButton" class="secondary-button" type="button">設定</button>
+        <button id="updateHistoryButton" class="secondary-button" type="button">アップデート履歴</button>
+      </div>
+      <p id="versionLabel" class="title-card__version" aria-label="現在のゲームバージョン"></p>
+    </section>
+
+    <section id="warningCard" class="warning-card" role="dialog" aria-modal="true" aria-labelledby="warningTitle" tabindex="-1" hidden>
+      <h2 id="warningTitle">プレイ前のご注意</h2>
+      <p>このゲームには、地震を想起させる画面の揺れ、振動音、突然の効果音、暗転などの演出が含まれます。</p>
+      <p>これらの表現に不安や強い負担を感じる方は、プレイをお控えいただくか、無理のない範囲でお楽しみください。</p>
+      <div class="warning-card__actions">
+        <button id="confirmStartButton" class="primary-button" type="button">内容を確認して開始する</button>
+        <button id="closeWarningButton" class="secondary-button" type="button">閉じる</button>
+      </div>
+    </section>
+
+    <section id="characterListCard" class="character-list-card" aria-labelledby="characterListTitle" tabindex="-1" hidden>
+      <p class="character-card__series">呪いの日記</p>
+      <h2 id="characterListTitle">登場人物</h2>
+      <p id="characterListEmpty" class="character-list-card__empty">まだ登録された人物はいません。</p>
+      <div id="characterListGrid" class="character-list-card__grid" hidden></div>
+      <button id="characterListBackButton" class="secondary-button character-card__back" type="button">タイトルへ戻る</button>
+    </section>
+
+    <section id="characterDetailCard" class="character-detail-card" aria-labelledby="characterDetailName" tabindex="-1" hidden>
+      <p class="character-card__series">登場人物</p>
+      <h2 id="characterDetailName"></h2>
+      <p id="characterDetailSummary" class="character-detail-card__summary"></p>
+      <div id="characterDetailChapters" class="character-detail-card__chapters"></div>
+      <div id="characterDetailProfiles" class="character-detail-card__content"></div>
+      <div id="characterDetailRecords" class="character-detail-card__content"></div>
+      <button id="characterDetailBackButton" class="secondary-button character-card__back" type="button">人物一覧へ戻る</button>
+    </section>
+
+    <section id="settingsCard" class="settings-card" aria-labelledby="settingsTitle" tabindex="-1" hidden>
+      <p class="settings-card__series">呪いの日記</p>
+      <h2 id="settingsTitle">設定</h2>
+      <p class="settings-card__description">音量とテキスト自動送りを調整できます。変更内容はこのブラウザに保存されます。</p>
+
+      <div class="settings-card__audio" aria-label="音量設定">
+        <section class="audio-setting" aria-labelledby="bgmVolumeLabel">
+          <div class="audio-setting__header">
+            <label id="bgmVolumeLabel" for="bgmVolumeInput">BGM</label>
+            <output id="bgmVolumeValue" for="bgmVolumeInput">100</output>
+          </div>
+          <div class="audio-setting__controls">
+            <input id="bgmVolumeInput" type="range" min="0" max="100" step="1" value="100">
+            <button id="bgmMuteButton" class="secondary-button audio-setting__mute" type="button" aria-pressed="false">ミュート</button>
+          </div>
+        </section>
+
+        <section class="audio-setting" aria-labelledby="environmentVolumeLabel">
+          <div class="audio-setting__header">
+            <label id="environmentVolumeLabel" for="environmentVolumeInput">環境音</label>
+            <output id="environmentVolumeValue" for="environmentVolumeInput">100</output>
+          </div>
+          <div class="audio-setting__controls">
+            <input id="environmentVolumeInput" type="range" min="0" max="100" step="1" value="100">
+            <button id="environmentMuteButton" class="secondary-button audio-setting__mute" type="button" aria-pressed="false">ミュート</button>
+          </div>
+        </section>
+
+        <section class="audio-setting" aria-labelledby="sfxVolumeLabel">
+          <div class="audio-setting__header">
+            <label id="sfxVolumeLabel" for="sfxVolumeInput">効果音</label>
+            <output id="sfxVolumeValue" for="sfxVolumeInput">100</output>
+          </div>
+          <div class="audio-setting__controls">
+            <input id="sfxVolumeInput" type="range" min="0" max="100" step="1" value="100">
+            <button id="sfxMuteButton" class="secondary-button audio-setting__mute" type="button" aria-pressed="false">ミュート</button>
+          </div>
+        </section>
+      </div>
+
+      <section class="text-setting" aria-labelledby="autoAdvanceLabel">
+        <div class="text-setting__header">
+          <h3 id="autoAdvanceLabel">テキスト自動送り</h3>
+          <p>本文を表示した後、選んだ速度で次へ進みます。</p>
+        </div>
+        <div class="auto-advance-options" role="group" aria-label="テキスト自動送り速度">
+          <button class="secondary-button" type="button" data-auto-advance-mode="off" aria-pressed="true">OFF</button>
+          <button class="secondary-button" type="button" data-auto-advance-mode="slow" aria-pressed="false">ゆっくり</button>
+          <button class="secondary-button" type="button" data-auto-advance-mode="normal" aria-pressed="false">標準</button>
+          <button class="secondary-button" type="button" data-auto-advance-mode="fast" aria-pressed="false">速い</button>
+        </div>
+      </section>
+
+      <div class="settings-card__actions">
+        <button id="resetAudioSettingsButton" class="secondary-button" type="button">初期設定に戻す</button>
+        <button id="settingsBackButton" class="primary-button" type="button">タイトルへ戻る</button>
+      </div>
+    </section>
+
+    <section id="updateHistoryCard" class="update-history-card" aria-labelledby="updateHistoryTitle" tabindex="-1" hidden>
+      <p class="update-history-card__series">呪いの日記</p>
+      <h2 id="updateHistoryTitle">アップデート履歴</h2>
+      <div id="updateHistoryList" class="update-history-card__list"></div>
+      <button id="updateHistoryBackButton" class="primary-button update-history-card__back" type="button">タイトルへ戻る</button>
+    </section>
+
+    <section id="timeCard" class="time-card" hidden>
+      <p id="timeText"></p>
+    </section>
+
+    <section id="messageWindow" class="message-window" aria-label="メッセージ" hidden>
+      <div class="message-window__meta">
+        <p id="speakerName" class="message-window__speaker"></p>
+        <span id="deliveryBadge" class="delivery-badge" hidden></span>
+      </div>
+      <p id="messageText" class="message-window__text"></p>
+      <span class="message-window__next" aria-hidden="true">▼</span>
+    </section>
+
+    <section id="choiceCard" class="choice-card" aria-labelledby="choicePrompt" hidden>
+      <p id="choicePrompt" class="choice-card__prompt">選択してください</p>
+      <div id="choiceOptions" class="choice-card__options"></div>
+    </section>
+
+    <section id="endCard" class="end-card" hidden>
+      <p id="endSeries" class="end-card__series">第一章</p>
+      <h2 id="endText">第一章終了</h2>
+      <p id="endNext">第二章へ続く</p>
+      <div id="endCredits" class="end-card__credits" aria-label="エンドロール" hidden>
+        <div class="end-card__credit-card" hidden>
+          <p class="end-card__work-title">呪いの日記</p>
+          <p>Planning / Scenario<br>奇妙映像ライブラリー</p>
+        </div>
+        <div class="end-card__credit-card" hidden>
+          <p>AI Support<br>ChatGPT</p>
+          <p>Background Art<br>ChatGPT</p>
+        </div>
+        <div class="end-card__credit-card" hidden>
+          <p>Music / Sound<br>効果音ラボ<br>Google Flow Music</p>
+        </div>
+        <div class="end-card__credit-card" hidden>
+          <p>Creative Director<br>奇妙映像ライブラリー</p>
+        </div>
+        <div class="end-card__credit-card" hidden>
+          <p class="end-card__thanks">Thank you for playing.</p>
+        </div>
+      </div>
+      <button id="endReturnButton" class="secondary-button end-card__return" type="button" hidden>タイトルへ戻る</button>
+    </section>
+
+    <section id="errorCard" class="error-card" role="alert" hidden>
+      <h2>読み込みエラー</h2>
+      <p id="errorText"></p>
+    </section>
+  </main>
+
+  <aside id="devPanel" class="dev-panel" aria-label="開発用ジャンプ" hidden>
+    <div class="dev-panel__header">
+      <strong>DEV JUMP</strong>
+      <button id="devPanelToggle" class="dev-panel__toggle" type="button" aria-expanded="true">閉じる</button>
+    </div>
+    <div id="devPanelBody" class="dev-panel__body">
+      <output id="devCurrentLocation" class="dev-panel__location">読み込み待ち</output>
+
+      <div class="dev-panel__grid">
+        <label>章
+          <select id="devChapterSelect"></select>
+        </label>
+        <label>地点
+          <select id="devSceneSelect"></select>
+        </label>
+      </div>
+      <button id="devSceneJumpButton" type="button">選択地点へジャンプ</button>
+
+      <div class="dev-panel__grid">
+        <label>sequence
+          <input id="devSequenceInput" type="number" min="1" step="1" inputmode="numeric">
+        </label>
+        <button id="devSequenceJumpButton" type="button">Scene・sequenceへ</button>
+      </div>
+
+      <div class="dev-panel__grid">
+        <label>章内表示番号（1始まり）
+          <input id="devChapterRecordInput" type="number" min="1" step="1" inputmode="numeric">
+        </label>
+        <button id="devChapterRecordJumpButton" type="button">章内番号へ</button>
+      </div>
+
+      <div class="dev-panel__grid">
+        <label>全体内部index（0始まり）
+          <input id="devGlobalIndexInput" type="number" min="0" step="1" inputmode="numeric">
+        </label>
+        <button id="devGlobalIndexJumpButton" type="button">内部indexへ</button>
+      </div>
+
+      <div class="dev-panel__actions">
+        <button id="devSaveButton" type="button">現在地を保存</button>
+        <button id="devLoadButton" type="button">手動保存へ復帰</button>
+        <button id="devLoadLastButton" type="button">最終プレイ地点へ復帰</button>
+        <button id="devRestartButton" type="button">最初から再開</button>
+      </div>
+      <p id="devStatus" class="dev-panel__status" role="status">開発モード</p>
+      <p class="dev-panel__help">F2：開閉／Alt+Shift+S：保存／Alt+Shift+R：手動保存へ復帰</p>
+    </div>
+  </aside>
+
+  <script src="game.js" defer></script>
+</body>
+</html>
