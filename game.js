@@ -23,11 +23,6 @@
     "speaker", "delivery_mode", "text", "background", "environment",
     "bgm", "sfx", "time_cue", "direction"
   ];
-  const ENABLE_DEV_TOOLS = true;
-  const isLocalHost = location.hostname === "localhost" || location.hostname === "127.0.0.1";
-  const isDevMode = ENABLE_DEV_TOOLS && isLocalHost && new URLSearchParams(location.search).get("dev") === "1";
-  const DEV_MANUAL_KEY = "cursedDiaryDevCheckpointV1";
-  const DEV_LAST_KEY = "cursedDiaryDevLastPositionV1";
   const PLAYER_PROGRESS_KEY = "cursedDiaryPlayerProgressV1";
   const PLAYER_PROGRESS_SCHEMA_VERSION = 1;
   const AUDIO_SETTINGS_KEY = "cursedDiaryAudioSettingsV1";
@@ -290,16 +285,7 @@
     endNext: document.querySelector("#endNext"), endCredits: document.querySelector("#endCredits"),
     endCreditCards: [...document.querySelectorAll(".end-card__credit-card")],
     endReturnButton: document.querySelector("#endReturnButton"), errorCard: document.querySelector("#errorCard"),
-    errorText: document.querySelector("#errorText"),
-    devPanel: document.querySelector("#devPanel"), devPanelToggle: document.querySelector("#devPanelToggle"),
-    devPanelBody: document.querySelector("#devPanelBody"), devCurrentLocation: document.querySelector("#devCurrentLocation"),
-    devChapterSelect: document.querySelector("#devChapterSelect"), devSceneSelect: document.querySelector("#devSceneSelect"),
-    devSequenceInput: document.querySelector("#devSequenceInput"), devChapterRecordInput: document.querySelector("#devChapterRecordInput"),
-    devGlobalIndexInput: document.querySelector("#devGlobalIndexInput"), devSceneJumpButton: document.querySelector("#devSceneJumpButton"),
-    devSequenceJumpButton: document.querySelector("#devSequenceJumpButton"), devChapterRecordJumpButton: document.querySelector("#devChapterRecordJumpButton"),
-    devGlobalIndexJumpButton: document.querySelector("#devGlobalIndexJumpButton"), devSaveButton: document.querySelector("#devSaveButton"),
-    devLoadButton: document.querySelector("#devLoadButton"), devLoadLastButton: document.querySelector("#devLoadLastButton"),
-    devRestartButton: document.querySelector("#devRestartButton"), devStatus: document.querySelector("#devStatus")
+    errorText: document.querySelector("#errorText")
   };
 
   const diagnostics = {
@@ -454,7 +440,7 @@
   }
 
   function addPlayerProgress(field, value) {
-    if (isDevMode || !PLAYER_PROGRESS_ALLOWED[field]?.has(value) || playerProgress[field].includes(value)) return false;
+    if (!PLAYER_PROGRESS_ALLOWED[field]?.has(value) || playerProgress[field].includes(value)) return false;
     playerProgress = {
       ...playerProgress,
       [field]: [...playerProgress[field], value]
@@ -1306,7 +1292,6 @@
     setChapterUi(CHAPTERS[0].id);
     setVisible(elements.titleCard);
     showMenuAtmosphere();
-    updateDevPanel();
   }
 
   async function runFinalEnding(record) {
@@ -1423,361 +1408,6 @@
     elements.progress.textContent = `${chapterIndex} / ${chapterRecords.length}｜${location}`;
   }
 
-  function getChapterRange(chapterId) {
-    const start = state.records.findIndex((record) => record.chapter_id === chapterId);
-    if (start < 0) return null;
-    let end = start;
-    while (end + 1 < state.records.length && state.records[end + 1].chapter_id === chapterId) end += 1;
-    return { start, end, count: end - start + 1 };
-  }
-
-  function getChapterRecordNumber(index) {
-    const record = state.records[index];
-    const range = record ? getChapterRange(record.chapter_id) : null;
-    return range ? index - range.start + 1 : null;
-  }
-
-  function setDevStatus(message, isError = false) {
-    if (!isDevMode || !elements.devStatus) return;
-    elements.devStatus.textContent = message;
-    elements.devStatus.classList.toggle("is-error", isError);
-  }
-
-  function getCurrentCheckpoint() {
-    const record = state.records[state.index];
-    if (!record) return null;
-    return {
-      schemaVersion: 1,
-      chapterId: record.chapter_id,
-      scene: record.scene_id,
-      sequence: record.sequence,
-      globalIndex: state.index,
-      chapterRecordNumber: getChapterRecordNumber(state.index),
-      savedAt: new Date().toISOString()
-    };
-  }
-
-  function writeDevCheckpoint(key, announce = true) {
-    if (!isDevMode) return false;
-    const checkpoint = getCurrentCheckpoint();
-    if (!checkpoint) {
-      if (announce) setDevStatus("保存できる現在位置がありません。", true);
-      return false;
-    }
-    try {
-      localStorage.setItem(key, JSON.stringify(checkpoint));
-      if (announce) setDevStatus(`保存しました：${checkpoint.chapterId} ${checkpoint.scene || "章題"} ${checkpoint.sequence || "-"}`);
-      return true;
-    } catch (error) {
-      diagnostics.errors.push(`開発用保存失敗: ${error.message}`);
-      if (announce) setDevStatus("保存に失敗しました。", true);
-      return false;
-    }
-  }
-
-  function readDevCheckpoint(key) {
-    if (!isDevMode) return null;
-    try {
-      const value = localStorage.getItem(key);
-      if (!value) return null;
-      const checkpoint = JSON.parse(value);
-      return checkpoint && typeof checkpoint === "object" ? checkpoint : null;
-    } catch (error) {
-      diagnostics.errors.push(`開発用保存読込失敗: ${error.message}`);
-      return null;
-    }
-  }
-
-  function resolveCheckpoint(checkpoint) {
-    if (!checkpoint) return null;
-    if (checkpoint.chapterId && checkpoint.scene && String(checkpoint.sequence) !== "") {
-      const exact = state.records.reduce((matches, record, index) => {
-        if (record.chapter_id === checkpoint.chapterId && record.scene_id === checkpoint.scene && record.sequence === String(checkpoint.sequence)) matches.push(index);
-        return matches;
-      }, []);
-      if (exact.length === 1) return exact[0];
-    }
-    const fallback = Number(checkpoint.globalIndex);
-    return Number.isInteger(fallback) && fallback >= 0 && fallback < state.records.length ? fallback : null;
-  }
-
-  function updateDevPanel() {
-    if (!isDevMode || !elements.devPanel) return;
-    const record = state.records[state.index];
-    if (!record) {
-      elements.devCurrentLocation.textContent = `開始待ち｜全${state.records.length}件｜内部indexは0始まり`;
-      return;
-    }
-    const range = getChapterRange(record.chapter_id);
-    const chapterNumber = getChapterRecordNumber(state.index);
-    elements.devCurrentLocation.textContent = [
-      getChapterConfig(record.chapter_id).endSeries,
-      record.scene_id || "章題",
-      `sequence ${record.sequence || "-"}`,
-      `章内 ${chapterNumber} / ${range.count}（1始まり）`,
-      `全体 ${state.index + 1} / ${state.records.length}`,
-      `内部index ${state.index}（0始まり）`
-    ].join("｜");
-  }
-
-  function populateDevScenes() {
-    if (!isDevMode) return;
-    const chapterId = elements.devChapterSelect.value;
-    const range = getChapterRange(chapterId);
-    elements.devSceneSelect.replaceChildren();
-    if (!range) return;
-    const chapter = getChapterConfig(chapterId);
-    const addOption = (label, index, scene = "") => {
-      const option = document.createElement("option");
-      option.textContent = label;
-      option.value = String(index);
-      option.dataset.scene = scene;
-      elements.devSceneSelect.append(option);
-    };
-    addOption(chapter.id === "CH02" ? `${chapter.endSeries}章タイトル` : `${chapter.endSeries}開始`, range.start);
-    const seen = new Set();
-    for (let index = range.start; index <= range.end; index += 1) {
-      const scene = state.records[index].scene_id;
-      if (!scene || seen.has(scene)) continue;
-      seen.add(scene);
-      addOption(`${scene}開始`, index, scene);
-    }
-    const preEnd = Math.max(range.start, range.end - 1);
-    addOption(`${chapter.endSeries}章末直前`, preEnd, state.records[preEnd].scene_id);
-  }
-
-  function populateDevChapters() {
-    if (!isDevMode) return;
-    elements.devChapterSelect.replaceChildren();
-    CHAPTERS.forEach((chapter) => {
-      const option = document.createElement("option");
-      option.value = chapter.id;
-      option.textContent = chapter.label;
-      elements.devChapterSelect.append(option);
-    });
-    populateDevScenes();
-  }
-
-  function parseStrictInteger(input, label) {
-    const value = input.value.trim();
-    if (!/^\d+$/.test(value)) {
-      setDevStatus(`${label}は0以上の整数で入力してください。`, true);
-      return null;
-    }
-    return Number(value);
-  }
-
-  function derivePersistentState(targetIndex) {
-    const persistent = { chapterId: "", scene: "", subsection: "", background: "", backgroundRecord: null, bgmId: "", bgmRecord: null, environmentIds: [], environmentRecord: null };
-    for (let index = 0; index < targetIndex; index += 1) {
-      const record = state.records[index];
-      if (record.chapter_id && record.chapter_id !== persistent.chapterId) {
-        persistent.chapterId = record.chapter_id;
-        persistent.scene = "";
-        persistent.subsection = "";
-        persistent.background = "";
-        persistent.backgroundRecord = null;
-        persistent.bgmId = "";
-        persistent.bgmRecord = null;
-        persistent.environmentIds = [];
-        persistent.environmentRecord = null;
-      }
-      if (record.scene_id && record.scene_id !== persistent.scene) {
-        persistent.scene = record.scene_id;
-        persistent.environmentIds = [];
-        persistent.environmentRecord = null;
-        if (record.chapter_id === "CH02") {
-          persistent.bgmId = "";
-          persistent.bgmRecord = null;
-        }
-      }
-      persistent.subsection = record.subsection || persistent.subsection;
-      if (record.record_type === "background" && record.background) {
-        persistent.background = record.background;
-        persistent.backgroundRecord = record;
-      }
-      if (record.record_type === "bgm" && record.bgm) {
-        if (record.bgm === "停止") { persistent.bgmId = ""; persistent.bgmRecord = null; }
-        else if (!AUDIO_CONTROL.test(record.bgm)) { persistent.bgmId = splitAssetIds(record.bgm)[0] || ""; persistent.bgmRecord = record; }
-      }
-      if (record.record_type === "environment" && record.environment) {
-        if (record.environment === "停止" || record.environment === "途切れる") {
-          persistent.environmentIds = [];
-          persistent.environmentRecord = null;
-        } else if (!AUDIO_CONTROL.test(record.environment)) {
-          persistent.environmentIds = splitAssetIds(record.environment);
-          persistent.environmentRecord = record;
-        }
-      }
-      if (record.record_type === "chapter_end") {
-        persistent.bgmId = "";
-        persistent.bgmRecord = null;
-        persistent.environmentIds = [];
-        persistent.environmentRecord = null;
-      }
-    }
-    return persistent;
-  }
-
-  function resetForDevJump() {
-    cancelEndingSequence();
-    stopAllAudio();
-    menuMode = false;
-    menuBgmRetryPending = false;
-    preplayedSfxIndexes.clear();
-    clearChoice();
-    state.currentEndLabel = "";
-    state.currentEndTitle = "";
-    elements.game.classList.remove("is-menu", "is-shaking", "is-shaking-strong", "is-time-morning", "is-time-day", "is-time-night");
-    elements.effect.classList.remove("is-blackout");
-    elements.background.classList.remove("is-loading");
-    elements.background.style.backgroundImage = "";
-    elements.warning.hidden = true;
-    elements.titleCard.inert = false;
-    clearMessage();
-    setVisible(null);
-  }
-
-  async function restorePersistentState(persistent, targetRecord) {
-    elements.background.style.backgroundImage = "";
-    state.background = "";
-    if (persistent.background) await setBackground(persistent.background, persistent.backgroundRecord || targetRecord);
-    if (persistent.bgmId) playBgm(persistent.bgmId, persistent.bgmRecord || targetRecord);
-    if (persistent.environmentIds.length) playEnvironment(persistent.environmentIds.join("+"), persistent.environmentRecord || targetRecord);
-  }
-
-  async function jumpToIndex(targetIndex, label = "指定位置") {
-    if (!isDevMode) return false;
-    if (!Number.isInteger(targetIndex) || targetIndex < 0 || targetIndex >= state.records.length) {
-      setDevStatus(`範囲外です。内部indexは0～${Math.max(0, state.records.length - 1)}です。`, true);
-      return false;
-    }
-    if (state.locked) {
-      setDevStatus("演出処理中です。完了後に再実行してください。", true);
-      return false;
-    }
-    state.locked = true;
-    const targetRecord = state.records[targetIndex];
-    const persistent = derivePersistentState(targetIndex);
-    if (targetRecord.chapter_id !== persistent.chapterId) {
-      persistent.background = "";
-      persistent.backgroundRecord = null;
-      persistent.bgmId = "";
-      persistent.bgmRecord = null;
-      persistent.environmentIds = [];
-      persistent.environmentRecord = null;
-    } else if (targetRecord.scene_id && targetRecord.scene_id !== persistent.scene) {
-      persistent.environmentIds = [];
-      persistent.environmentRecord = null;
-      if (targetRecord.chapter_id === "CH02") {
-        persistent.bgmId = "";
-        persistent.bgmRecord = null;
-      }
-    }
-    try {
-      resetForDevJump();
-      state.index = targetIndex;
-      state.started = true;
-      state.ended = false;
-      state.lastInput = performance.now();
-      state.chapterId = persistent.chapterId;
-      state.scene = persistent.scene;
-      state.subsection = persistent.subsection;
-      setChapterUi(targetRecord.chapter_id);
-      await restorePersistentState(persistent, targetRecord);
-      diagnostics.jumpedIndexes.push(targetIndex);
-      await processRecord(targetRecord);
-      writeDevCheckpoint(DEV_LAST_KEY, false);
-      updateDevPanel();
-      setDevStatus(`${label}へ移動しました。`);
-      return true;
-    } catch (error) {
-      diagnostics.errors.push(`開発用ジャンプ失敗 ${targetIndex}: ${error.message}`);
-      console.error("[dev-jump]", error);
-      setDevStatus("ジャンプに失敗しました。", true);
-      return false;
-    } finally {
-      state.locked = false;
-    }
-  }
-
-  function jumpToSelectedScene() {
-    const index = Number(elements.devSceneSelect.value);
-    void jumpToIndex(index, elements.devSceneSelect.selectedOptions[0]?.textContent || "選択地点");
-  }
-
-  function jumpToSceneSequence() {
-    const scene = elements.devSceneSelect.selectedOptions[0]?.dataset.scene;
-    if (!scene) { setDevStatus("Scene開始を選択してください。", true); return; }
-    const sequence = parseStrictInteger(elements.devSequenceInput, "sequence");
-    if (sequence === null) return;
-    const chapterId = elements.devChapterSelect.value;
-    const matches = state.records.reduce((indexes, record, index) => {
-      if (record.chapter_id === chapterId && record.scene_id === scene && record.sequence === String(sequence)) indexes.push(index);
-      return indexes;
-    }, []);
-    if (matches.length !== 1) {
-      setDevStatus(matches.length ? "該当位置が複数あります。章内番号を使用してください。" : "該当するScene・sequenceがありません。", true);
-      return;
-    }
-    void jumpToIndex(matches[0], `${chapterId} ${scene} sequence ${sequence}`);
-  }
-
-  function jumpToChapterRecord() {
-    const number = parseStrictInteger(elements.devChapterRecordInput, "章内表示番号");
-    if (number === null) return;
-    const chapterId = elements.devChapterSelect.value;
-    const range = getChapterRange(chapterId);
-    if (!range || number < 1 || number > range.count) {
-      setDevStatus(`章内表示番号は1～${range?.count || 0}です。`, true);
-      return;
-    }
-    void jumpToIndex(range.start + number - 1, `${getChapterConfig(chapterId).endSeries} ${number}件目`);
-  }
-
-  function jumpToGlobalIndex() {
-    const index = parseStrictInteger(elements.devGlobalIndexInput, "全体内部index");
-    if (index !== null) void jumpToIndex(index, `内部index ${index}`);
-  }
-
-  function restoreDevCheckpoint(key, label) {
-    const checkpoint = readDevCheckpoint(key);
-    if (!checkpoint) { setDevStatus(`${label}がありません。`, true); return; }
-    const index = resolveCheckpoint(checkpoint);
-    if (index === null) { setDevStatus(`${label}の位置を特定できません。`, true); return; }
-    void jumpToIndex(index, label);
-  }
-
-  function toggleDevPanel() {
-    const collapsed = elements.devPanel.classList.toggle("is-collapsed");
-    elements.devPanelToggle.textContent = collapsed ? "開く" : "閉じる";
-    elements.devPanelToggle.setAttribute("aria-expanded", String(!collapsed));
-  }
-
-  function handleDevShortcut(event) {
-    if (!isDevMode || event.repeat) return;
-    if (event.key === "F2") { event.preventDefault(); toggleDevPanel(); }
-    else if (event.altKey && event.shiftKey && event.key.toLowerCase() === "s") { event.preventDefault(); writeDevCheckpoint(DEV_MANUAL_KEY); }
-    else if (event.altKey && event.shiftKey && event.key.toLowerCase() === "r") { event.preventDefault(); restoreDevCheckpoint(DEV_MANUAL_KEY, "手動保存地点"); }
-  }
-
-  function initDevTools() {
-    if (!isDevMode || !elements.devPanel) return;
-    elements.devPanel.hidden = false;
-    populateDevChapters();
-    elements.devChapterSelect.addEventListener("change", populateDevScenes);
-    elements.devPanelToggle.addEventListener("click", toggleDevPanel);
-    elements.devSceneJumpButton.addEventListener("click", jumpToSelectedScene);
-    elements.devSequenceJumpButton.addEventListener("click", jumpToSceneSequence);
-    elements.devChapterRecordJumpButton.addEventListener("click", jumpToChapterRecord);
-    elements.devGlobalIndexJumpButton.addEventListener("click", jumpToGlobalIndex);
-    elements.devSaveButton.addEventListener("click", () => writeDevCheckpoint(DEV_MANUAL_KEY));
-    elements.devLoadButton.addEventListener("click", () => restoreDevCheckpoint(DEV_MANUAL_KEY, "手動保存地点"));
-    elements.devLoadLastButton.addEventListener("click", () => restoreDevCheckpoint(DEV_LAST_KEY, "最終位置"));
-    elements.devRestartButton.addEventListener("click", () => { void jumpToIndex(0, "最初から"); });
-    window.addEventListener("keydown", handleDevShortcut);
-    updateDevPanel();
-  }
 
   async function finishChapter(record) {
     cancelAutoAdvance();
@@ -1967,10 +1597,6 @@
     } finally {
       state.locked = false;
       isAdvancing = false;
-      if (isDevMode) {
-        writeDevCheckpoint(DEV_LAST_KEY, false);
-        updateDevPanel();
-      }
       scheduleAutoAdvance();
     }
     return true;
@@ -2071,7 +1697,6 @@
         .join("・") + "を読み込みました";
       elements.start.disabled = false;
       elements.progress.textContent = "開始待ち";
-      initDevTools();
     } catch (error) {
       diagnostics.errors.push(error.message);
       elements.errorText.textContent = error.message;
@@ -2125,7 +1750,6 @@
   window.addEventListener("pointerup", retryMenuBgmAfterGesture, { capture: true });
   window.addEventListener("keydown", retryMenuBgmAfterGesture, { capture: true });
   window.addEventListener("pagehide", () => {
-    if (isDevMode) writeDevCheckpoint(DEV_LAST_KEY, false);
     stopAllAudio();
   });
 
@@ -2166,18 +1790,7 @@
       environment: [...environment.values()].map((audio) => ({ id: audio.dataset.assetId, volume: audio.volume, baseVolume: Number(audio.dataset.baseVolume), scale: getAudioVolumeScale(audio), loop: audio.loop, paused: audio.paused, currentTime: audio.currentTime })),
       sfx: [...activeSfx].map((audio) => ({ id: audio.dataset.assetId, volume: audio.volume, baseVolume: Number(audio.dataset.baseVolume), scale: getAudioVolumeScale(audio), loop: audio.loop, paused: audio.paused, currentTime: audio.currentTime }))
     }),
-    assets: ASSETS,
-    dev: isDevMode ? Object.freeze({
-      enabled: true,
-      manualKey: DEV_MANUAL_KEY,
-      lastKey: DEV_LAST_KEY,
-      jumpToIndex,
-      derivePersistentState,
-      getChapterRange,
-      getCurrentCheckpoint,
-      readCheckpoint: readDevCheckpoint,
-      resolveCheckpoint
-    }) : null
+    assets: ASSETS
   });
 
   renderAudioSettings();
@@ -2186,3 +1799,17 @@
   showMenuAtmosphere();
   void load();
 })();
+
+// ---------- 素材・本文の簡易的な持ち出し防止(右クリック保存・コピー・ドラッグ保存の抑止) ----------
+document.addEventListener('contextmenu', (e) => e.preventDefault());
+document.addEventListener('dragstart', (e) => e.preventDefault());
+document.addEventListener('copy', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA') return; // 設定画面の入力欄は除外
+  e.preventDefault();
+});
+document.addEventListener('selectstart', (e) => {
+  const tag = (e.target && e.target.tagName) || '';
+  if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return; // 入力欄・プルダウンは除外
+  e.preventDefault();
+});

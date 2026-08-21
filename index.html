@@ -175,56 +175,6 @@
     </section>
   </main>
 
-  <aside id="devPanel" class="dev-panel" aria-label="開発用ジャンプ" hidden>
-    <div class="dev-panel__header">
-      <strong>DEV JUMP</strong>
-      <button id="devPanelToggle" class="dev-panel__toggle" type="button" aria-expanded="true">閉じる</button>
-    </div>
-    <div id="devPanelBody" class="dev-panel__body">
-      <output id="devCurrentLocation" class="dev-panel__location">読み込み待ち</output>
-
-      <div class="dev-panel__grid">
-        <label>章
-          <select id="devChapterSelect"></select>
-        </label>
-        <label>地点
-          <select id="devSceneSelect"></select>
-        </label>
-      </div>
-      <button id="devSceneJumpButton" type="button">選択地点へジャンプ</button>
-
-      <div class="dev-panel__grid">
-        <label>sequence
-          <input id="devSequenceInput" type="number" min="1" step="1" inputmode="numeric">
-        </label>
-        <button id="devSequenceJumpButton" type="button">Scene・sequenceへ</button>
-      </div>
-
-      <div class="dev-panel__grid">
-        <label>章内表示番号（1始まり）
-          <input id="devChapterRecordInput" type="number" min="1" step="1" inputmode="numeric">
-        </label>
-        <button id="devChapterRecordJumpButton" type="button">章内番号へ</button>
-      </div>
-
-      <div class="dev-panel__grid">
-        <label>全体内部index（0始まり）
-          <input id="devGlobalIndexInput" type="number" min="0" step="1" inputmode="numeric">
-        </label>
-        <button id="devGlobalIndexJumpButton" type="button">内部indexへ</button>
-      </div>
-
-      <div class="dev-panel__actions">
-        <button id="devSaveButton" type="button">現在地を保存</button>
-        <button id="devLoadButton" type="button">手動保存へ復帰</button>
-        <button id="devLoadLastButton" type="button">最終プレイ地点へ復帰</button>
-        <button id="devRestartButton" type="button">最初から再開</button>
-      </div>
-      <p id="devStatus" class="dev-panel__status" role="status">開発モード</p>
-      <p class="dev-panel__help">F2：開閉／Alt+Shift+S：保存／Alt+Shift+R：手動保存へ復帰</p>
-    </div>
-  </aside>
-
   <script src="game.js" defer></script>
 </body>
 </html>
